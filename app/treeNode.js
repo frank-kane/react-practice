@@ -3,23 +3,44 @@ import React, { useState } from "react";
 
 let nextId = 2;
 
-const TreeNode = ({ node, onAdd, depth = 0, prefix = "" }) => {
+const TreeNode = ({ node, onAdd, onEdit, depth = 0, prefix = "" }) => {
   const [isOpen, setIsOpen] = useState(true);
+
   const hasChildren = node.children.length > 0;
 
   return (
-    
     <li>
-      <div style={{ fontFamily: "monospace", whiteSpace: "pre", margin: 30 }}>
+      <div style={{ fontFamily: "monospace", whiteSpace: "pre" }}>
         {prefix}
-        {hasChildren ? (isOpen ? "▼─ " : "▶─ ") : "•─ "}
-        {node.label}
-        <button onClick={() => onAdd(node.id)}>➕</button>
-        <button onClick={() => setIsOpen(!isOpen)}>⤵️</button>
+        <div
+          style={{
+            border: "2px solid white",
+            display: "flex",
+            flexDirection: "column",
+            width: 200,
+            gap: 4,
+          }}
+        >
+          <div>{hasChildren ? (isOpen ? "▼─ " : "▶─ ") : "•─ "}</div>
+          <input
+            type="text"
+            value={node.label}
+            onChange={(e) => onEdit(node.id, e.target.value)}
+            style={{ padding: 4 }}
+          />
+          <button onClick={() => onAdd(node.id)}>➕ Add Child</button>
+          <button onClick={() => setIsOpen(!isOpen)}>⤵️ Toggle</button>
+        </div>
       </div>
 
       {isOpen && hasChildren && (
-        <ul style={{ listStyle: "none", paddingLeft: "1em" }}>
+        <ul
+          style={{
+            listStyle: "none",
+            paddingLeft: "1em",
+            marginLeft: 200,
+          }}
+        >
           {node.children.map((child, index) => {
             const isLast = index === node.children.length - 1;
             const childPrefix = prefix + (isLast ? "   " : "│  ");
@@ -28,6 +49,7 @@ const TreeNode = ({ node, onAdd, depth = 0, prefix = "" }) => {
                 key={child.id}
                 node={child}
                 onAdd={onAdd}
+                onEdit={onEdit}
                 depth={depth + 1}
                 prefix={childPrefix}
               />
@@ -43,7 +65,7 @@ const Tree = () => {
   const [tree, setTree] = useState({
     id: "1",
     label: "Root",
-    children: []
+    children: [],
   });
 
   const addNode = (parentId) => {
@@ -53,23 +75,37 @@ const Tree = () => {
         const newNode = {
           id: newId,
           label: `Node ${newId}`,
-          children: []
+          children: [],
         };
         return { ...node, children: [...node.children, newNode] };
       }
 
       return {
         ...node,
-        children: node.children.map(addToTree)
+        children: node.children.map(addToTree),
       };
     };
 
     setTree((prevTree) => addToTree(prevTree));
   };
 
+  const editNodeLabel = (id, newLabel) => {
+    const updateLabel = (node) => {
+      if (node.id === id) {
+        return { ...node, label: newLabel };
+      }
+      return {
+        ...node,
+        children: node.children.map(updateLabel),
+      };
+    };
+
+    setTree((prevTree) => updateLabel(prevTree));
+  };
+
   return (
     <ul style={{ listStyle: "none", paddingLeft: 0 }}>
-      <TreeNode node={tree} onAdd={addNode} />
+      <TreeNode node={tree} onAdd={addNode} onEdit={editNodeLabel} />
     </ul>
   );
 };
