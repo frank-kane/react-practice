@@ -1,9 +1,17 @@
 "use client";
 import React, { useEffect, useState } from "react";
 
-const TreeNode = ({ node, onAdd, onEdit, onDelete, depth = 0, prefix = "" }) => {
+const TreeNode = ({
+  node,
+  onAdd,
+  onEdit,
+  onDelete,
+  onToggleDone,
+  depth = 0,
+  prefix = "",
+}) => {
   const [isOpen, setIsOpen] = useState(true);
-  const [isDone, setIsDone] = useState(false);
+  //const [isDone, setIsDone] = useState(false);
 
   const hasChildren = node.children.length > 0;
 
@@ -32,7 +40,7 @@ const TreeNode = ({ node, onAdd, onEdit, onDelete, depth = 0, prefix = "" }) => 
     <li>
       <div style={{ fontFamily: "monospace", whiteSpace: "pre" }}>
         {prefix}
-        <div style={isDone ? finishedStyle : unfinishedStyle}>
+        <div style={node.isDone ? finishedStyle : unfinishedStyle}>
           <div>{hasChildren ? (isOpen ? "▼─ " : "▶─ ") : "•─ "}</div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -50,7 +58,7 @@ const TreeNode = ({ node, onAdd, onEdit, onDelete, depth = 0, prefix = "" }) => 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
             <button onClick={() => onAdd(node.id)}>➕ Add Child</button>
             <button onClick={() => setIsOpen(!isOpen)}>⤵️ Toggle</button>
-            <button onClick={() => setIsDone(!isDone)}>✅ Done</button>
+            <button onClick={() => onToggleDone(node.id)}>✅ Done</button>
             {node.id !== "1" && (
               <button onClick={() => onDelete(node.id)}>🗑️ Delete</button>
             )}
@@ -78,6 +86,7 @@ const TreeNode = ({ node, onAdd, onEdit, onDelete, depth = 0, prefix = "" }) => 
                 onDelete={onDelete} // ✅ Forward delete handler here
                 depth={depth + 1}
                 prefix={childPrefix}
+                onToggleDone={onToggleDone}
               />
             );
           })}
@@ -94,41 +103,54 @@ const Tree = () => {
     children: [],
   });
 
-  const deleteNode = (idToDelete) => {
-  if (idToDelete === "1") return; // don't delete root
-
-  // Remove the node
-  const removeNode = (node) => {
-    return {
-      ...node,
-      children: node.children
-        .filter((child) => child.id !== idToDelete)
-        .map(removeNode),
+  const toggleDone = (id) => {
+    const updateDone = (node) => {
+      if (node.id === id) {
+        return { ...node, isDone: !node.isDone }; // ✅ FIXED HERE
+      }
+      return {
+        ...node,
+        children: node.children.map(updateDone),
+      };
     };
+
+    setTree((prevTree) => updateDone(prevTree));
   };
 
-  const cleaned = removeNode(tree);
+  const deleteNode = (idToDelete) => {
+    if (idToDelete === "1") return; // don't delete root
 
-  // Rebuild IDs
-  const reindexTree = (node, currentId = "1") => {
-  let index = 1;
+    // Remove the node
+    const removeNode = (node) => {
+      return {
+        ...node,
+        children: node.children
+          .filter((child) => child.id !== idToDelete)
+          .map(removeNode),
+      };
+    };
 
-  const newChildren = node.children.map((child) => {
-    const newId = `${currentId}.${index++}`;
-    return reindexTree(child, newId);
-  });
+    const cleaned = removeNode(tree);
 
-  return {
-    ...node,
-    id: currentId,
-    label: `Node ${currentId}`, // 👈 This line renames the label
-    children: newChildren,
+    // Rebuild IDs
+    const reindexTree = (node, currentId = "1") => {
+      let index = 1;
+
+      const newChildren = node.children.map((child) => {
+        const newId = `${currentId}.${index++}`;
+        return reindexTree(child, newId);
+      });
+
+      return {
+        ...node,
+        id: currentId,
+        label: `Node ${currentId}`, // 👈 This line renames the label
+        children: newChildren,
+      };
+    };
+
+    setTree(reindexTree(cleaned));
   };
-};
-
-  setTree(reindexTree(cleaned));
-};
-
 
   const addNode = (parentId) => {
     const addToTree = (node) => {
@@ -138,6 +160,7 @@ const Tree = () => {
           id: newId,
           label: `Node ${newId}`,
           children: [],
+          isDone: false, // ✅ add this
         };
         return { ...node, children: [...node.children, newNode] };
       }
@@ -189,6 +212,7 @@ const Tree = () => {
         onAdd={addNode}
         onEdit={editNodeLabel}
         onDelete={deleteNode}
+        onToggleDone={toggleDone}
       />
     </ul>
   );
