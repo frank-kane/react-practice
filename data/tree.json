@@ -6,14 +6,21 @@
     {
       "id": "1.1",
       "label": "Habits",
-      "children": [],
+      "children": [
+        {
+          "id": "1.1.1",
+          "label": "Node 1.1.1",
+          "children": [],
+          "isDone": false
+        }
+      ],
       "isDone": false
     },
     {
       "id": "1.2",
       "label": "Node 1.2",
       "children": [],
-      "isDone": true
+      "isDone": false
     },
     {
       "id": "1.3",
