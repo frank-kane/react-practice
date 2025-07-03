@@ -1,8 +1,6 @@
 "use client";
 import React, { useState } from "react";
 
-let nextId = 2;
-
 const TreeNode = ({ node, onAdd, onEdit, depth = 0, prefix = "" }) => {
   const [isOpen, setIsOpen] = useState(true);
 
@@ -17,17 +15,24 @@ const TreeNode = ({ node, onAdd, onEdit, depth = 0, prefix = "" }) => {
             border: "2px solid white",
             display: "flex",
             flexDirection: "column",
-            width: 200,
-            gap: 4,
+            width: 250,
+            gap: 8,
+            padding: 8,
+            marginBottom: 6,
           }}
         >
           <div>{hasChildren ? (isOpen ? "▼─ " : "▶─ ") : "•─ "}</div>
-          <input
-            type="text"
-            value={node.label}
-            onChange={(e) => onEdit(node.id, e.target.value)}
-            style={{ padding: 4 }}
-          />
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <div><strong>{node.id}</strong></div>
+            <input
+              type="text"
+              value={node.label}
+              onChange={(e) => onEdit(node.id, e.target.value)}
+              style={{ padding: 4, width: "100%" }}
+            />
+          </div>
+
           <button onClick={() => onAdd(node.id)}>➕ Add Child</button>
           <button onClick={() => setIsOpen(!isOpen)}>⤵️ Toggle</button>
         </div>
